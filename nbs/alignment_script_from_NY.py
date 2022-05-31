@@ -41,63 +41,32 @@ Output_excel_file_name = values[5]
 
 
 def _abi_trim(seq_record):
-
     start = False  # flag for starting position of trimmed sequence
-
     segment = 20  # minimum sequence length
-
     trim_start = 0  # init start index
-
     cutoff = 0.01  # default cutoff value for calculating base score
 
-
-
 # calculate base score
-
     score_list = [cutoff - (10 ** (qual / -25.0)) for qual in seq_record.letter_annotations["phred_quality"]]
-    
-       
-
         # calculate cummulative score
-
         # if cummulative value < 0, set it to 0
-
         # first value is set to 0, because of the assumption that
-
         # the first base will always be trimmed out
 
     cummul_score = [0]
-
     for i in range(1, len(score_list)):
-
         score = cummul_score[-1] + score_list[i]
-
         if score < 0:
-
             cummul_score.append(0)
-
         else:
-
             cummul_score.append(score)
-
             if not start:
-
                     # trim_start = value when cummulative score is first > 0
-
                 trim_start = i
-
                 start = True
-
-
-
         # trim_finish = index of highest cummulative score,
-
         # marking the end of sequence segment with highest cummulative score
-
     trim_finish = cummul_score.index(max(cummul_score))
-
-
-
     return seq_record[trim_start:trim_finish]
 
 
@@ -111,55 +80,33 @@ count = 0
   
 #read abspeeq h3 data    
 h_data = pd.read_csv(abspeeq_data, sep='\t')
-
 vh_names = []
-
 for template_strand in os.listdir(VH_sequence_folder):
     template_strand = template_strand.split('VH-')[1]
     template_strand = template_strand.split('.gb')[0]
     vh_names.append(template_strand)
-    
 h3_data = h_data[['name', 'h3_nt']]
-
 h3_names = h3_data['name'].to_list()
 h3_nt = h3_data['h3_nt'].to_list()
                  
 h3_dict = pd.Series(h3_nt, index=h3_names).to_dict()
-    
-    
 h3_matching_sequence_results = pd.DataFrame(columns = ['H3 template sequence', 'Matching well'])
-
 vl_seq_dictionary = {}
-
 template_name_list = []
 
 for filename in os.listdir(abi_sequence_file):
-                                                    
-        
-        
         if 'ab1' in filename:
-                                 
             if 'VH60' in filename:
-                
                 data = ({'Sequence name':filename,'Matching template':'None','Sequence':'Please check manually'})
                 matching_sequence_results = matching_sequence_results.append(data, ignore_index=True)
                 dna = SeqIO.read(abi_sequence_file+'/'+filename, 'abi')
-                
                 dna = _abi_trim(dna)
-                quality = dna.letter_annotations["phred_quality"]      
-                           
-                
+                quality = dna.letter_annotations["phred_quality"]
                 dna = dna.seq
-                
                 h3_template_sequence_list = []
-                    
                 dna_rev = dna.reverse_complement()
-                
-                
-                    
                     
                 for h3_sequence_key in h3_dict:
-                    
                     if str(h3_dict[h3_sequence_key]) in str(dna_rev):
                         for name in vh_names:
                             if name in h3_sequence_key: 
@@ -169,7 +116,6 @@ for filename in os.listdir(abi_sequence_file):
                                     shutil.copy2(abi_sequence_file+'/'+filename, 
                                                  Output_excel_folder_destination+
                                                  '/'+Output_excel_file_name+'/'+'H3_sorted_sequences'+'/'+h3_sequence_key)
-
                                 except FileExistsError:
                                     shutil.copy2(abi_sequence_file+'/'+filename, 
                                                  Output_excel_folder_destination+'/'
@@ -178,11 +124,10 @@ for filename in os.listdir(abi_sequence_file):
                                 h3_template_sequence_list.append(h3_sequence_key)
                                 h3_matching_sequence_results = h3_matching_sequence_results.append(
                                     {'H3 template sequence':h3_sequence_key, 'Matching well':filename}, ignore_index=True)
-                    
                 for template_strand in os.listdir(VH_sequence_folder):
                     template_name_list.append(template_strand)
                     parsed_template_strand = template_strand.split('VH-')[1]
-                    parsed_template_strand = parsed_template_strand.split('.gb')[0]                                                                        
+                    parsed_template_strand = parsed_template_strand.split('.gb')[0]                                                                   
                     for element in h3_template_sequence_list:
                         if parsed_template_strand in element:
                             print(element)
@@ -190,32 +135,26 @@ for filename in os.listdir(abi_sequence_file):
                             for a in pairwise2.align.globalms(template.seq, dna_rev, 2, -1000, -1000, -1000, 
                                                               penalize_end_gaps = False):
                                     score = int(a[2])
-                                    
                                     # quick check score is reasonable
                                     if score >= 700:
-                                        
                                         aligned_seq_a = a[0]
                                         aligned_seq_a = aligned_seq_a.replace('-', '')
                                         aligned_seq_a_start = aligned_seq_a[0:6]
                                         aligned_seq_a_length = len(aligned_seq_a) - 6
                                         aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
-                                        aligned_seq_b = a[1]
-                                        
-                                        
+                                        aligned_seq_b = a[1]                                        
                                         # check for gaps in template
                                         if '-' not in aligned_seq_b:
                                             #check aligned seq starts with CTCCAC
                                             if 'CTCCAC' in aligned_seq_a_start:
                                                 #check aligned seq ends with CTTTCT
                                                 if 'CTTTCT' in aligned_seq_a_end:
-                                                
                                                     count += 1
                                                     print(filename)
                                                     print(template_strand)
                                                     print('\n')
                                                     print(format_alignment(*a))
                                                     print('\n')
-                                                    
                                                     aligned_seq = a[0]
                                                     aligned_seq = aligned_seq.replace('-', '')
                                                     aligned_seq = Seq(aligned_seq)
@@ -228,83 +167,59 @@ for filename in os.listdir(abi_sequence_file):
                                                     quality = quality[start:end]
                                                     quality_score = statistics.mean(quality)
                                                     lowest_quality = min(quality)
-                                                    
-                                                    
-                                                    
-
                                                     matching_sequence_results.drop(matching_sequence_results.tail(1).index,inplace=True)
-                                                    data = ({'Sequence name':filename,'Matching template':parsed_template_strand,'Sequence':'VH60 Ok', 
-                                                             'VH mean quality':quality_score, 'VH lowest quality base':lowest_quality})
+                                                    data = ({'Sequence name':filename,'Matching template':parsed_template_strand,'Sequence':'VH60 Ok', 'VH mean quality':quality_score, 'VH lowest quality base':lowest_quality})
                                                     matching_sequence_results = matching_sequence_results.append(data, ignore_index=True)
                                                     filename = filename.split('_GATC')[0]
                                                     filename = filename.split('-VH60')[0]
                                                     vl_seq_dictionary[filename] = parsed_template_strand
-
                                                     print(count)
-
                                                     break
-
                                                 else:
                                                     pass
                                             else:
                                                 pass
-                                            
                                         else:
                                             pass
-                                        
                                     else:
                                         pass
-
-
                                     
 for filename in os.listdir(abi_sequence_file):
         if 'ab1' in filename:
             if 'VL' in filename:
                 parsed_filename = filename.split('-VL79')[0]
                 if parsed_filename in vl_seq_dictionary.keys():
-                    
                     matching_template_strand = vl_seq_dictionary[parsed_filename]
                     dna = SeqIO.read(abi_sequence_file+'/'+filename, 'abi')
                     dna = _abi_trim(dna)
-                    
                     quality = dna.letter_annotations["phred_quality"]
-                               
                     dna = dna.seq            
                     dna_for = dna.reverse_complement()
-                        
                     for template_strand in os.listdir(VL_sequence_folder):
                         if matching_template_strand in template_strand:
                             template = SeqIO.read(VL_sequence_folder+'/'+template_strand, 'gb')
                             for a in pairwise2.align.globalms(template.seq, dna_for, 2, -1000, -1000, -1000, penalize_end_gaps = False):
                                 score = int(a[2])
-                                
                                 #quick check score is reasonable
                                 if score >= 700:
-                                    
                                     aligned_seq_a = a[0]
                                     aligned_seq_a = aligned_seq_a.replace('-', '')
                                     aligned_seq_a_start = aligned_seq_a[0:6]
                                     aligned_seq_a_length = len(aligned_seq_a) - 6
                                     aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
                                     aligned_seq_b = a[1]
-                                    
                                     #check for gaps in template during alignment
                                     if '-' not in aligned_seq_b:
                                         #check aligned seq starts with CTCCAC
                                         if 'CTCCAC' in aligned_seq_a_start:
                                             #check aligned seq ends with GCTTGG
                                             if 'GCTTGG' in aligned_seq_a_end:
-                                                
-                                                
-                                                
                                                 count += 1
                                                 print(filename)
                                                 print(template_strand)
                                                 print('\n')
                                                 print(format_alignment(*a))
-
                                                 print('\n')
-
                                                 aligned_seq = a[0]
                                                 aligned_seq = aligned_seq.replace('-', '')
                                                 aligned_seq = Seq(aligned_seq)
@@ -313,19 +228,14 @@ for filename in os.listdir(abi_sequence_file):
                                                 aligned_seq_rev = str(aligned_seq_rev)
                                                 start = re.search(aligned_seq_rev, dna_string).start()
                                                 end = re.search(aligned_seq_rev, dna_string).end()
-                                                    
                                                 quality = quality[start:end]
                                                 quality_score = statistics.mean(quality)
                                                 lowest_quality = min(quality)
-                                                
                                                 data = ({'Sequence name':filename,'Matching template':template_strand,'Sequence':'VL79 Ok', 
                                                          'VL mean quality':quality_score, 'VL lowest quality base':lowest_quality})
                                                 matching_sequence_results = matching_sequence_results.append(data, ignore_index=True)
-
                                                 print(count)
-
                                                 break
-                                                
                                             else:
                                                 pass
                                         else:
@@ -338,12 +248,9 @@ for filename in os.listdir(abi_sequence_file):
                     pass
                 
 matching_sequence_results = matching_sequence_results.set_index('Sequence name')
-
 vl_79_ok_list_dictionary = {}
 vl_79_mean_quality_dictionary = {}
 vl_79_lowest_quality_dictionary = {}
-
-
 for i in matching_sequence_results.index:
     if 'VL79' in i:
         if 'VL79 Ok' in matching_sequence_results.at[i, 'Sequence']:
@@ -354,10 +261,8 @@ for i in matching_sequence_results.index:
             vl_79_ok_list_dictionary[parsed_i] = matching_template
             vl_79_mean_quality_dictionary[parsed_i] = vl_mean_quality
             vl_79_lowest_quality_dictionary [parsed_i] = vl_lowest_quality
-            
 parsed_output = pd.DataFrame(columns=['Matching template', 'Sequenced well', 'VH60', 'VL79', 'VH mean quality', 
                                       'VH lowest quality base', 'VL mean quality', 'VL lowest quality base'])
-
 for i in matching_sequence_results.index:
     if 'VH60' in i:
         if 'VH60 Ok' in matching_sequence_results.at[i, 'Sequence']:
@@ -379,18 +284,14 @@ for i in matching_sequence_results.index:
 
                         
 parsed_output = parsed_output.sort_values('Matching template', ascending=False)
-
 parsed_output = parsed_output.reset_index(drop=True)
-
 final_output = pd.DataFrame(columns=['Matching template', 'Sequenced well', 'VH60', 'VL79', 'VH lowest quality base', 'VL lowest quality base'])
-
 for i in parsed_output.index:
     current_matching_temp = parsed_output.at[i, 'Matching template']
     seq_name = parsed_output.at[i, 'Sequenced well']
     vh_qual = parsed_output.at[i, 'VH lowest quality base']
     vl_qual = parsed_output.at[i, 'VL lowest quality base']
     mean_error_probability = parsed_output.at[i, 'Mean probability of error for lowest quality bases in VH and VL']
-    
     if i >= 1:
         prev_matching_temp = parsed_output.at[i-1, 'Matching template']
         if prev_matching_temp in current_matching_temp:
@@ -451,19 +352,15 @@ seq_found_list = seq_found['Matching template'].to_list()
 for i in seq_found_list:
     try:
         seq_found_list.remove('')
-
     except ValueError:
         break
         
 seq_not_found = []
-
 for i in template_name_list:
     found = False
-       
     for element in seq_found_list:
         if element in i:
             found = True
-    
     if found == False:
         seq_not_found.append(i)
         seq_found_list.append(i)
