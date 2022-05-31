@@ -15,7 +15,7 @@ pip3 install -r requirements.txt
 ```
 
 ### file structure
-
+- create a dir `from_ny` in the root of the project dir and put the ab1 files 
 - Excel File
 ```raw
 14 clones H3.xlsx
