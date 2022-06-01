@@ -9,7 +9,7 @@ from IPython.display import display
 import re
 import shutil
 import statistics
-import PySimpleGUI as sg
+# import PySimpleGUI as sg
 
 
 # sg.theme('Default1')
@@ -31,13 +31,19 @@ import PySimpleGUI as sg
 # window.close()
 
 
-abi_sequence_file = values[0]
-VH_sequence_folder = values[1]
-VL_sequence_folder = values[2]
-abspeeq_data = values[3]
-Output_excel_folder_destination = values[4]
-Output_excel_file_name = values[5]
+# abi_sequence_file = values[0]
+# VH_sequence_folder = values[1]
+# VL_sequence_folder = values[2]
+# abspeeq_data = values[3]
+# Output_excel_folder_destination = values[4]
+# Output_excel_file_name = values[5]
 
+abi_sequence_file = "../from_ny/Sequencing results"
+VH_sequence_folder = "../from_ny/Templates/VH"
+VL_sequence_folder = "../from_ny/Templates/VL"
+abspeeq_data = "../from_ny/14clonesH3.tsv"
+Output_excel_folder_destination = "../tmp_res"
+Output_excel_file_name = "T01"
 
 
 def _abi_trim(seq_record):
@@ -45,14 +51,12 @@ def _abi_trim(seq_record):
     segment = 20  # minimum sequence length
     trim_start = 0  # init start index
     cutoff = 0.01  # default cutoff value for calculating base score
-
 # calculate base score
     score_list = [cutoff - (10 ** (qual / -25.0)) for qual in seq_record.letter_annotations["phred_quality"]]
         # calculate cummulative score
         # if cummulative value < 0, set it to 0
         # first value is set to 0, because of the assumption that
         # the first base will always be trimmed out
-
     cummul_score = [0]
     for i in range(1, len(score_list)):
         score = cummul_score[-1] + score_list[i]
@@ -70,21 +74,29 @@ def _abi_trim(seq_record):
     return seq_record[trim_start:trim_finish]
 
 
-os.mkdir(Output_excel_folder_destination+'/'+Output_excel_file_name)
+if not os.path.exists(Output_excel_folder_destination+'/'+Output_excel_file_name):
+    os.mkdir(Output_excel_folder_destination+'/'+Output_excel_file_name)
 column_names = ['Sequence name', 'Matching template', 'Sequence']
 matching_sequence_results = pd.DataFrame(columns = column_names)
-
 #make folder for H3 sequences output
-os.mkdir(Output_excel_folder_destination+'/'+Output_excel_file_name+'/'+'H3_sorted_sequences')
+
+# CAUTION : is overwritten if file already exists 
+if not os.path.exists(Output_excel_folder_destination+'/'+Output_excel_file_name):
+    os.mkdir(Output_excel_folder_destination+'/'+Output_excel_file_name+'/'+'H3_sorted_sequences')
 count = 0
   
 #read abspeeq h3 data    
 h_data = pd.read_csv(abspeeq_data, sep='\t')
+print(f"[+] h_data has name and h3_nt : {h_data}")  # this works
+
 vh_names = []
 for template_strand in os.listdir(VH_sequence_folder):
     template_strand = template_strand.split('VH-')[1]
     template_strand = template_strand.split('.gb')[0]
     vh_names.append(template_strand)
+
+print(f"[+] vh_names has the 14 VH files: {vh_names}")
+
 h3_data = h_data[['name', 'h3_nt']]
 h3_names = h3_data['name'].to_list()
 h3_nt = h3_data['h3_nt'].to_list()
@@ -93,6 +105,37 @@ h3_dict = pd.Series(h3_nt, index=h3_names).to_dict()
 h3_matching_sequence_results = pd.DataFrame(columns = ['H3 template sequence', 'Matching well'])
 vl_seq_dictionary = {}
 template_name_list = []
+
+def get_seq_and_quality_from_abi(fname : str, trim_seq: bool = True, seq_rev: bool = True) -> list:
+    """
+    Returns a list of sequence and quality
+    """
+    dna = SeqIO.read(fname, 'abi')
+    if trim_seq:
+        dna = _abi_trim(dna)
+        quality = dna.letter_annotations["phred_quality"]
+        if seq_rev:
+            dna = dna.reverse_complement()
+            return([dna.seq, quality])
+        else:
+            return([dna.seq, quality])
+    else:
+        quality = dna.letter_annotations["phred_quality"]
+        if seq_rev:
+            dna = dna.reverse_complement()
+            return([dna, quality])
+        else:
+            return([dna.seq, quality])
+
+# use get_seq_and_quality_from_abi in the following loop
+# test get_seq_and_quality_from_abi
+_D, _Q = get_seq_and_quality_from_abi('../from_ny/Sequencing results/VH/FST470-hIgG1-011-A1_A01-VH60.ab1', trim_seq=True, seq_rev=False)
+print(f"[+] _D has the sequence: {_D}")
+print(f"[+] _Q has the quality: {_Q}")
+
+exit()
+
+
 
 for filename in os.listdir(abi_sequence_file):
         if 'ab1' in filename:
