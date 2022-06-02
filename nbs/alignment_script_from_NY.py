@@ -133,7 +133,7 @@ _D, _Q = get_seq_and_quality_from_abi('../from_ny/Sequencing results/VH/FST470-h
 print(f"[+] _D has the sequence: {_D}")
 print(f"[+] _Q has the quality: {_Q}")
 
-exit()
+# exit()
 
 
 
