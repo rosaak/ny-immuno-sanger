@@ -2,4 +2,6 @@ env/
 from_ny/
 .ipynb_checkpoints
 .DS_Store
+data02/
+archives/
 
