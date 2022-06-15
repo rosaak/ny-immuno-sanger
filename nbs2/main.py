@@ -1,7 +1,5 @@
-from pydoc import doc
-
 #!/usr/bin/env python3
-# Path: nbs2/main.py
+
 
 """
 This script requires finds the probes in VH and VL against the H3 reference.
@@ -10,6 +8,7 @@ and calculates the number of mismatches between the two.
 And finally it calculates some statistics on the mismatches.
 """
 
+from pydoc import doc
 import configparser
 import dataclasses
 import os
@@ -26,8 +25,10 @@ from Bio import SeqIO, pairwise2
 from Bio.pairwise2 import format_alignment
 from Bio.Seq import Seq
 from IPython.display import display
+import logging
 
 import utils
+
 
 # Functions
 
@@ -165,6 +166,7 @@ def find_match_on_all_h3probes(log: logging, h3_dict: dict, d: SeqIO.SeqRecord, 
 
 
 # Init Logging
+Path('logs').mkdir(parents=True, exist_ok=True)
 log = utils.make_logger("logs/rp_log")
 
 config = configparser.ConfigParser()
