@@ -45,9 +45,12 @@ h3_nt_data_sheet_filepath = check_files(config['Files']['h3_nt_data_sheet_filepa
 df = check_tsv_file(h3_nt_data_sheet_filepath, log)
 excel_path_file_name = create_results_excel_file_path(config['Paths']['results_dir'], config['Files']['output_excel_file_name'])
 
-# patters
+# patterns
 pat_vh, pat_vl = get_patterns(config)
-patrm_vh, patrm_vl = get_patterns_to_rm(config)
+# patterns to remove from abi names
+patrm_vh_abi, patrm_vl_abi = get_patterns_to_rm(config)
+# patterns to remove from genbank names
+patrm_vh_gb, patrm_vl_gb = get_patterns_to_rm_from_genbank(config)
 
 # creating dirs for copying matched abi files
 res_dir_vh = checking_dirs(f"{results_dir}/{pat_vh}", log, log_msg=True, create_dir=True)
