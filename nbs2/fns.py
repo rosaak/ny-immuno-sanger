@@ -69,6 +69,14 @@ def get_patterns_to_rm(config: configparser.ConfigParser):
     patrm_vh, patrm_vl = config['Pattern']['vh_pat_to_rm'], config['Pattern']['vl_pat_to_rm']
     return patrm_vh, patrm_vl
 
+def get_alignment_params(config: configparser.ConfigParser):
+    par_match=config['Alignment_parameter']['match']
+    par_missmatch=config['Alignment_parameter']['mismatch']
+    par_open=config['Alignment_parameter']['open']
+    par_extend=config['Alignment_parameter']['extend']
+    par_filter_thresh=config['Alignment_parameter']['filter_thresh']
+    return par_match, par_missmatch, par_open, par_extend, par_filter_thresh
+
 def checking_ab1_files(log:logging, vh_abi_dict: dict, vl_abi_dict: dict) -> str:
     """
     Return sample ids
@@ -141,11 +149,11 @@ def find_match_on_all_h3probes(log: logging, h3_dict: dict, d: SeqIO.SeqRecord, 
         vh_fn = vh_abi_dict.get(sample)
         vl_fn = vl_abi_dict.get(sample)
         if h3val in seq_f:
-            log.info(f"[+] INFO: Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+            log.info(f"[+] PROBE_MATCHING: Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
             # print(f"Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}|{h3val}|{seq_f}")
             results.append(["Forward_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, seq_f, d])
         elif h3val in seq_r:
-            log.info(f"[+] INFO: Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+            log.info(f"[+] PROBE_MATCHING: Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
             # print(f"Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}|{h3val}|{seq_r}")
             results.append(["Reverse_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, seq_r, d])
         else:
@@ -172,8 +180,8 @@ def copy_mtched_abi_files_to_resdir_x(log: logging, df_vh:pd.DataFrame, df_vl:pd
             res_dir_vl_msid = checking_dirs(f"{res_dir_vl}/{__dfvl.h3_name}", log, log_msg=False, create_dir=True)
             shutil.copy(__dfvh.vh_abi_fp, res_dir_vh_msid)
             shutil.copy(__dfvl.vl_abi_fp, res_dir_vl_msid)
-            log.info(f"[+] INFO: copying {__dfvh.vh_abi_fp} to {res_dir_vh_msid}")
-            log.info(f"[+] INFO: copying {__dfvh.vl_abi_fp} to {res_dir_vl_msid}")
+            log.info(f"[+] COPY: {__dfvh.vh_abi_fp} to {res_dir_vh_msid}")
+            log.info(f"[+] COPY: {__dfvh.vl_abi_fp} to {res_dir_vl_msid}")
             resx.append([__dfvh.h3_name, __dfvh.sample_id, f"{res_dir_vh}/{__dfvh.sample_id}", __dfvh.vh_abi_fp])
             resx.append([__dfvl.h3_name, __dfvl.sample_id, f"{res_dir_vl}/{__dfvl.sample_id}", __dfvl.vl_abi_fp])
     return pd.DataFrame(resx, columns=["h3_name", "sample_id", "abi_out_loc", "abi_initial_filepath"])
@@ -192,7 +200,7 @@ def copy_mtched_abi_files_to_resdir(res_dir_vh:str, res_dir_vl:str, vx_abi_fp:st
                 __df = _df.iloc[j]
                 res_dir_msid = checking_dirs(f"{res_dir_vx}/{__df.h3_name}", log, log_msg=False, create_dir=True)
                 shutil.copy(__df[vx_abi_fp], res_dir_msid)
-                log.info(f"[+] INFO: copying {__df[vx_abi_fp]} to {res_dir_msid}") if log_msg else None
+                log.info(f"[+] COPY: {__df[vx_abi_fp]} to {res_dir_msid}") if log_msg else None
                 res.append([__df.h3_name, __df.sample_id, f"{res_dir_vx}/{__df.sample_id}", __df[vx_abi_fp]])
         return pd.DataFrame(res, columns=["h3_name", "sample_id", "abi_out_loc", "abi_initial_filepath"])
     
