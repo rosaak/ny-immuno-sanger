@@ -308,7 +308,7 @@ def run_alignment_and_filtering(M_gb_abi_vx: pd.DataFrame,
         for e2, abx in enumerate(range(_dfvx_ss.shape[0])):
             # match between gb and vx-abi
             try:
-                seqA = SeqIO.read(vh_template_gb_dict.get(gbid), 'gb')
+                seqA = SeqIO.read(vx_template_gb_dict.get(gbid), 'gb')
                 seqB = _dfvx_ss.iloc[abx].abi_seq
                 seqBinit = _dfvx_ss.iloc[abx].seq_record.seq
                 quality = _dfvx_ss.iloc[abx].trimmed_seq_qual
@@ -338,37 +338,21 @@ def run_alignment_and_filtering(M_gb_abi_vx: pd.DataFrame,
                                     quality = quality[start:end]
                                     quality_score = statistics.mean(quality)
                                     lowest_quality = min(quality)
-                                    # print(f"{e} | {abx} | VH | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
+                                    # print(f"{e} | {abx} | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
                                     log.info(f"[+] FILTERED_GOODMATCH: {e}|{abx}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|{quality_score}|{lowest_quality}")if log_msg else None
                                     filtered_res.append([gbid, _dfvx_ss.iloc[abx].h3_name, gbfp, _dfvx_ss.iloc[abx].vh_abi_fp, score, quality_score, lowest_quality])
                 else:
                     log.info(f"[+] FILTERED_BADMATCH: {e}|{abx}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|---|---")if log_msg else None
             except:
                 pass
-    dfres = pd.DataFrame(filtered_res)
-    dfres.columns = ["gbid", "H3_name", "GB_FP", "ABI_FP", "Score", "Quality_score", "Low_quality"]
-    return dfres
+    if not len(filtered_res) == 0:
+        dfres = pd.DataFrame(filtered_res)
+        dfres.columns = ["gbid", "H3_name", "GB_FP", "ABI_FP", "Score", "Quality_score", "Low_quality"]
+        return dfres
+    else:
+        return None
     
-    
-    # resx, resy = [],[]
-    # for i df_vh.h3_name.unique()[:]:
-    #     _dfvh = df_vh[df_vh.h3_name == i]
-    #     for j in range(_dfvh.shape[0]):
-    #         __dfvh = _dfvh.iloc[j]
-    #         res_dir_vh_msid = checking_dirs(f"{res_dir_vh}/{__dfvh.h3_name}", log, log_msg=False, create_dir=True)
-    #         shutil.copy(__dfvh.vh_abi_fp, res_dir_vh_msid)
-    #         log.info(f"[+] INFO: copying {__dfvh.vh_abi_fp} to {res_dir_vh_msid}")
-    #         resx.append([__dfvh.h3_name, __dfvh.sample_id, f"{res_dir_vh}/{__dfvh.sample_id}", __dfvh.vh_abi_fp])
-    # for i in df_vl.h3_name.unique()[:]:
-    #     _dfvl = df_vl[df_vl.h3_name == i]
-    #     for j in range(_dfvl.shape[0]):
-    #         __dfvl = _dfvl.iloc[j]
-    #         res_dir_vl_msid = checking_dirs(f"{res_dir_vl}/{__dfvl.h3_name}", log, log_msg=False, create_dir=True)
-    #         shutil.copy(__dfvl.vl_abi_fp, res_dir_vl_msid)
-    #         log.info(f"[+] INFO: copying {__dfvh.vl_abi_fp} to {res_dir_vl_msid}")
-    #         resy.append([__dfvl.h3_name, __dfvl.sample_id, f"{res_dir_vl}/{__dfvl.sample_id}", __dfvl.vl_abi_fp])
-    # return pd.DataFrame(resx, columns=["h3_name", "sample_id", "abi_out_loc", "abi_initial_filepath"])
-    
+
     
 def main():
     pass
