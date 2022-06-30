@@ -150,13 +150,12 @@ vl_gb_abi_match_filtered = run_alignment_and_filtering(M_gb_abi_vl, df_vl, vl_te
 
 # save these dataframes
 
-if isinstance(vh_gb_abi_match_filtered, type(None)):
-    vh_gb_abi_match_filtered.to_excel("VH_Match_GB_ABI.xls")
+if not isinstance(vh_gb_abi_match_filtered, type(None)):
+    vh_gb_abi_match_filtered.to_excel("VH_Match_GB_ABI.xlsx", index=False)
 else:
     print("Check the log file")
 
-
-if isinstance(vl_gb_abi_match_filtered, type(None)):
-    vl_gb_abi_match_filtered.to_excel("VL_Match_GB_ABI.xls")
+if not isinstance(vl_gb_abi_match_filtered, type(None)):
+    vl_gb_abi_match_filtered.to_excel("VL_Match_GB_ABI.xls", index=False)
 else:
     print("Check the log file")
