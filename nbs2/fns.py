@@ -88,6 +88,20 @@ def get_alignment_seq_start_and_end(config: configparser.ConfigParser):
     vl_seq_aln_end_a=config['Alignment_parameter']['vl_seq_aln_end_a']
     return vh_seq_aln_start_a, vh_seq_aln_end_a, vl_seq_aln_start_a, vl_seq_aln_end_a
 
+
+def get_excel_file_name(config: configparser.ConfigParser,  accessory:bool=False)-> str:
+    """
+    Create the excel file name from config entry. datetime will be appened to the filename
+    Input:
+    config: config parser
+    aceesory: A suffix of accissory to add to the excel file name
+    """
+    if not accessory:
+        return os.path.join(config["Paths"]["results_dir"], config["Files"]["output_excel_file_name"] +"_"+str(utils.now())+".xlsx")
+    else:
+        return os.path.join(config["Paths"]["results_dir"], config["Files"]["output_excel_file_name"] +"_accessory_"+str(utils.now())+".xlsx")
+
+
 def extract_nts_from_start_and_end_from_genbank(gb_dict:dict, nt_len:int=6) -> pd.DataFrame:
     
     def _get_nts(fp:str, nt_len:int=6):
@@ -165,67 +179,67 @@ def get_seq_from_record(dna_obj: Seq, reverse=False) -> [Seq]:
         return dna_obj.reverse_complement().seq
 
 
-def find_match_on_all_h3probes(log: logging, h3_dict: dict,  d: SeqIO.SeqRecord, sample:str, vh_abi_dict: dict, vl_abi_dict: dict) -> list:
-    """
-    Returns: [orientation of match, h3_probe_name, sample_id, vh_abi_dp, vl_abi_fp, probe_seq, abi_seq, sequence_record]
-    inputs
-    log: logger 
-    h3_dict: dictionary containing h3_name and probe_name
-    d: Sequence Record of 
-    sample:
-    vh_abi_dict:
-    vl_abi_dict:
-    """
-    results = []
-    for h3key, h3val in h3_dict.items():
-        d_trimmed, d_trimquallst = get_trimmed_seq_record(d, get_quality=True)
-        seq_f = get_seq_from_record(d, reverse=False)
-        seq_r = get_seq_from_record(d, reverse=True)
-        vh_fn = vh_abi_dict.get(sample)
-        vl_fn = vl_abi_dict.get(sample)
-        if h3val in seq_f:
+# def find_match_on_all_h3probes(log: logging, h3_dict: dict,  d: SeqIO.SeqRecord, sample:str, vh_abi_dict: dict, vl_abi_dict: dict) -> list:
+#     """
+#     Returns: [orientation of match, h3_probe_name, sample_id, vh_abi_dp, vl_abi_fp, probe_seq, abi_seq, sequence_record]
+#     inputs
+#     log: logger 
+#     h3_dict: dictionary containing h3_name and probe_name
+#     d: Sequence Record of 
+#     sample:
+#     vh_abi_dict:
+#     vl_abi_dict:
+#     """
+#     results = []
+#     for h3key, h3val in h3_dict.items():
+#         d_trimmed, d_trimquallst = get_trimmed_seq_record(d, get_quality=True)
+#         seq_f = get_seq_from_record(d, reverse=False)
+#         seq_r = get_seq_from_record(d, reverse=True)
+#         vh_fn = vh_abi_dict.get(sample)
+#         vl_fn = vl_abi_dict.get(sample)
+#         if h3val in seq_f:
 
-            log.info(f"[+] PROBE_MATCHING: Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
-            # print(f"Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}|{h3val}|{seq_f}")
-            results.append(["Forward_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, seq_f, d])
-        elif h3val in seq_r:
-            log.info(f"[+] PROBE_MATCHING: Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
-            # print(f"Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}|{h3val}|{seq_r}")
-            results.append(["Reverse_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, seq_r, d])
-        else:
-            pass
-            # log.info(f"[-] INFO: No_match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
-            # results.append(["No_match", h3key, sample, vh_fn, vl_fn, '', ''])
-    return(results)
+#             log.info(f"[+] PROBE_MATCHING: Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+#             # print(f"Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}|{h3val}|{seq_f}")
+#             results.append(["Forward_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, seq_f, d])
+#         elif h3val in seq_r:
+#             log.info(f"[+] PROBE_MATCHING: Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+#             # print(f"Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}|{h3val}|{seq_r}")
+#             results.append(["Reverse_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, seq_r, d])
+#         else:
+#             pass
+#             # log.info(f"[-] INFO: No_match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+#             # results.append(["No_match", h3key, sample, vh_fn, vl_fn, '', ''])
+#     return(results)
 
 
-def find_match_on_all_h3probes_v2(log: logging, h3_dict: dict,  d: SeqIO.SeqRecord, sample:str, vh_abi_dict: dict, vl_abi_dict: dict) -> list:
-    """
-    Returns: [orientation of match, h3_probe_name, sample_id, vh_abi_dp, vl_abi_fp, probe_seq, seq_record, abi_seq, trimmed_seq, trimmed_seq_qual]
-    inputs
-    log: logger 
-    h3_dict: dictionary containing h3_name and probe_name
-    d: Sequence Record from the abi file
-    sample: sample id - comes from sample_ids
-    vh_abi_dict: dictionary containing vh names and full file path
-    vl_abi_dict: dictionary containing vl names and full file path
-    """
-    results = []
-    for h3key, h3val in h3_dict.items():
-        d_trimmed, d_trimquallst = get_trimmed_seq_record(d, get_quality=True)
-        seq_f = get_seq_from_record(d, reverse=False)
-        seq_r = get_seq_from_record(d, reverse=True)
-        vh_fn = vh_abi_dict.get(sample)
-        vl_fn = vl_abi_dict.get(sample)
-        if h3val in seq_f:
-            log.info(f"[+] PROBE_MATCHING: Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
-            results.append(["Forward_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, d, seq_f, d_trimmed, d_trimquallst])
-        elif h3val in seq_r:
-            log.info(f"[+] PROBE_MATCHING: Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
-            results.append(["Reverse_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, d, seq_r, d_trimmed, d_trimquallst])
-        else:
-            pass
-    return(results)
+# def find_match_on_all_h3probes_v2(log: logging, h3_dict: dict,  d: SeqIO.SeqRecord, sample:str, vh_abi_dict: dict, vl_abi_dict: dict) -> list:
+#     """
+#     Returns: [orientation of match, h3_probe_name, sample_id, vh_abi_dp, vl_abi_fp, probe_seq, seq_record, abi_seq, trimmed_seq, trimmed_seq_qual]
+#     inputs
+#     log: logger 
+#     h3_dict: dictionary containing h3_name and probe_name
+#     d: Sequence Record from the abi file
+#     sample: sample id - comes from sample_ids
+#     vh_abi_dict: dictionary containing vh names and full file path
+#     vl_abi_dict: dictionary containing vl names and full file path
+#     """
+#     results = []
+#     for h3key, h3val in h3_dict.items():
+#         d_trimmed, d_trimquallst = get_trimmed_seq_record(d, get_quality=True)
+#         seq_f = get_seq_from_record(d, reverse=False)
+#         seq_r = get_seq_from_record(d, reverse=True)
+#         vh_fn = vh_abi_dict.get(sample)
+#         vl_fn = vl_abi_dict.get(sample)
+#         if h3val in seq_f:
+#             log.info(f"[+] PROBE_MATCHING: Forward_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+#             results.append(["Forward_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, d, seq_f, d_trimmed, d_trimquallst])
+#         elif h3val in seq_r:
+#             log.info(f"[+] PROBE_MATCHING: Reverse_Strand_Match|{h3key}|{sample}|{vh_fn}|{vl_fn}")
+#             results.append(["Reverse_Strand_Match", h3key, sample, vh_fn, vl_fn, h3val, d, seq_r, d_trimmed, d_trimquallst])
+#         else:
+#             pass
+#     return(results)
 
 
 
@@ -267,28 +281,28 @@ def find_match_on_all_h3probes_v3(log: logging, h3_dict: dict,  vh_sr: SeqIO.Seq
 
 
 
-def copy_mtched_abi_files_to_resdir_x(log: logging, df_vh:pd.DataFrame, df_vl:pd.DataFrame, res_dir_vh:str, res_dir_vl:str)->pd.DataFrame:
-    """
-    creates a dir within the results_dir for VH and VL, with h3_name
-    and copy vh and vl matched abi files into it
-    """
-    resx = []
-    for e,i in enumerate(df_vh.h3_name.unique()[:], start=1):
-        _dfvh = df_vh[df_vh.h3_name == i]
-        _dfvl = df_vl[df_vl.h3_name == i]
-        for j in range(_dfvh.shape[0]):
-            __dfvh = _dfvh.iloc[j]
-            __dfvl = _dfvl.iloc[j]
-            # creating dirs 
-            res_dir_vh_msid = checking_dirs(f"{res_dir_vh}/{__dfvh.h3_name}", log, log_msg=False, create_dir=True)
-            res_dir_vl_msid = checking_dirs(f"{res_dir_vl}/{__dfvl.h3_name}", log, log_msg=False, create_dir=True)
-            shutil.copy(__dfvh.vh_abi_fp, res_dir_vh_msid)
-            shutil.copy(__dfvl.vl_abi_fp, res_dir_vl_msid)
-            log.info(f"[+] COPY: {__dfvh.vh_abi_fp} to {res_dir_vh_msid}")
-            log.info(f"[+] COPY: {__dfvh.vl_abi_fp} to {res_dir_vl_msid}")
-            resx.append([__dfvh.h3_name, __dfvh.sample_id, f"{res_dir_vh}/{__dfvh.sample_id}", __dfvh.vh_abi_fp])
-            resx.append([__dfvl.h3_name, __dfvl.sample_id, f"{res_dir_vl}/{__dfvl.sample_id}", __dfvl.vl_abi_fp])
-    return pd.DataFrame(resx, columns=["h3_name", "sample_id", "abi_out_loc", "abi_initial_filepath"])
+# def copy_mtched_abi_files_to_resdir_x(log: logging, df_vh:pd.DataFrame, df_vl:pd.DataFrame, res_dir_vh:str, res_dir_vl:str)->pd.DataFrame:
+#     """
+#     creates a dir within the results_dir for VH and VL, with h3_name
+#     and copy vh and vl matched abi files into it
+#     """
+#     resx = []
+#     for e,i in enumerate(df_vh.h3_name.unique()[:], start=1):
+#         _dfvh = df_vh[df_vh.h3_name == i]
+#         _dfvl = df_vl[df_vl.h3_name == i]
+#         for j in range(_dfvh.shape[0]):
+#             __dfvh = _dfvh.iloc[j]
+#             __dfvl = _dfvl.iloc[j]
+#             # creating dirs 
+#             res_dir_vh_msid = checking_dirs(f"{res_dir_vh}/{__dfvh.h3_name}", log, log_msg=False, create_dir=True)
+#             res_dir_vl_msid = checking_dirs(f"{res_dir_vl}/{__dfvl.h3_name}", log, log_msg=False, create_dir=True)
+#             shutil.copy(__dfvh.vh_abi_fp, res_dir_vh_msid)
+#             shutil.copy(__dfvl.vl_abi_fp, res_dir_vl_msid)
+#             log.info(f"[+] COPY: {__dfvh.vh_abi_fp} to {res_dir_vh_msid}")
+#             log.info(f"[+] COPY: {__dfvh.vl_abi_fp} to {res_dir_vl_msid}")
+#             resx.append([__dfvh.h3_name, __dfvh.sample_id, f"{res_dir_vh}/{__dfvh.sample_id}", __dfvh.vh_abi_fp])
+#             resx.append([__dfvl.h3_name, __dfvl.sample_id, f"{res_dir_vl}/{__dfvl.sample_id}", __dfvl.vl_abi_fp])
+#     return pd.DataFrame(resx, columns=["h3_name", "sample_id", "abi_out_loc", "abi_initial_filepath"])
 
 
 def copy_mtched_abi_files_to_resdir(log: logging, res_dir_vh: str, res_dir_vl:str, df_vh:pd.DataFrame = None,  log_msg:bool= True)->pd.DataFrame:
@@ -313,7 +327,7 @@ def copy_mtched_abi_files_to_resdir(log: logging, res_dir_vh: str, res_dir_vl:st
     return pd.concat([df1, df2]).reset_index(drop=True)
         
     
-def find_gb_match_on_all_h3probes_v2(log: logging, gb_tmplate_dict: dict, df_vx: pd.DataFrame, pattern='VH-', log_msg: bool=True) -> pd.DataFrame:
+def find_gb_match_on_all_h3probes(log: logging, gb_tmplate_dict: dict, df_vx: pd.DataFrame, pattern='VH-', log_msg: bool=True) -> pd.DataFrame:
     gb_match_with_dfvx_lst = []
     for gb_id in [*gb_tmplate_dict.keys()]:
         _ = df_vx[df_vx.h3_name == gb_id.replace(pattern, '')]
@@ -401,142 +415,219 @@ def run_alignment_and_filtering(M_gb_abi_vx: pd.DataFrame,
     else:
         return None
     
-def run_gb_alignment_and_filtering_v1(M_gb_abi_vx, df_vx, vx_template_gb_dict, vx_seq_start_a, vx_seq_end_a, par_match, par_missmatch, par_open, par_extend, par_filter_thresh, log, log_msg=True, is_data_vl=False):
-    filtered_res = []
-    for e,i in enumerate(range(M_gb_abi_vx.shape[0])[0:]):
-        gbid = M_gb_abi_vx.iloc[i].gb_id
-        gbfp = M_gb_abi_vx.iloc[i].gb_fp
-        _dfvx_ss = df_vx[df_vx.h3_name == M_gb_abi_vx.iloc[i].h3_name]
-        for e2, abx in enumerate(range(_dfvx_ss.shape[0])):
-            # genbank
-            seqA = SeqIO.read(vx_template_gb_dict.get(gbid), 'gb')
-            # vl
-            flag = ''
-            if is_data_vl:
-                flag = 'VL'
-                seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vl_abi_fp)
-                seqB_vxinit = _dfvx_ss.iloc[abx]["vl_inti_sr"].seq
-                seqB_vx, quality = get_trimmed_seq_record(seqB, get_quality=True)
-                seqB_vx = get_seq_from_record(seqB_vx, reverse=True)
-            else:
-                flag = 'VH'
-                # seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vh_abi_fp)
-                # # seqB = _dfvx_ss.iloc[abx].vh_sr_seq_r
-                # seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
-                # quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
+# def run_gb_alignment_and_filtering_v1(M_gb_abi_vx, df_vx, vx_template_gb_dict, vx_seq_start_a, vx_seq_end_a, par_match, par_missmatch, par_open, par_extend, par_filter_thresh, log, log_msg=True, is_data_vl=False):
+#     filtered_res = []
+#     for e,i in enumerate(range(M_gb_abi_vx.shape[0])[0:]):
+#         gbid = M_gb_abi_vx.iloc[i].gb_id
+#         gbfp = M_gb_abi_vx.iloc[i].gb_fp
+#         _dfvx_ss = df_vx[df_vx.h3_name == M_gb_abi_vx.iloc[i].h3_name]
+#         for e2, abx in enumerate(range(_dfvx_ss.shape[0])):
+#             # genbank
+#             seqA = SeqIO.read(vx_template_gb_dict.get(gbid), 'gb')
+#             # vl
+#             flag = ''
+#             if is_data_vl:
+#                 flag = 'VL'
+#                 seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vl_abi_fp)
+#                 seqB_vxinit = _dfvx_ss.iloc[abx]["vl_inti_sr"].seq
+#                 seqB_vx, quality = get_trimmed_seq_record(seqB, get_quality=True)
+#                 seqB_vx = get_seq_from_record(seqB_vx, reverse=True)
+#             else:
+#                 flag = 'VH'
+#                 # seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vh_abi_fp)
+#                 # # seqB = _dfvx_ss.iloc[abx].vh_sr_seq_r
+#                 # seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
+#                 # quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
                 
-                seqB_vx = _dfvx_ss.iloc[abx].vh_sr_seq_r
-                seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
-                quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
+#                 seqB_vx = _dfvx_ss.iloc[abx].vh_sr_seq_r
+#                 seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
+#                 quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
                 
-            # match between gb and vl-abi
-            try:          
-                for a in align(seqA.seq, seqB_vx, match=par_match, mismatch=par_missmatch, gap_open=par_open, gap_extend=par_extend):  #😄
-                    score = int(a[2])
-                    # print(f"{e} | {abx} | {flag} | {_dfvx_ss.iloc[abx].vl_abi_fp} |{score}")
-                    if score >= int(par_filter_thresh):
-                        # getting the aligned seqA and seqB
-                        aligned_seq_a = a[0]
-                        aligned_seq_a = aligned_seq_a.replace('-', '')
-                        aligned_seq_a_start = aligned_seq_a[0:6]
-                        aligned_seq_a_length = len(aligned_seq_a) - 6
-                        aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
-                        aligned_seq_b = a[1]
-                        #print(f"{e} | {abx} | VL | {_dfvx_ss.iloc[abx].vl_abi_fp} |{score} | {aligned_seq_a_start} | {aligned_seq_a_end} | {len(aligned_seq_a)} | {len(aligned_seq_b)} | {aligned_seq_a[0:6] +'..'+ aligned_seq_a[-6:]} | {aligned_seq_b[0:6] +'..'+ aligned_seq_b[-6:]}")
-                        # futher filtering of seqB
-                        if '-' not in aligned_seq_b:
-                            if vx_seq_start_a in aligned_seq_a_start:    # 😄
-                                if vx_seq_end_a in aligned_seq_a_end:    # 😄
-                                    aligned_seq = a[0]
-                                    aligned_seq = aligned_seq.replace('-', '')
-                                    aligned_seq = Seq(aligned_seq)
-                                    aligned_seq_rev = aligned_seq.reverse_complement()
-                                    dna_string = str(seqB_vxinit)        #😄
-                                    aligned_seq_rev = str(aligned_seq_rev)
-                                    start = re.search(aligned_seq_rev, dna_string).start()
-                                    end = re.search(aligned_seq_rev, dna_string).end()
-                                    quality = quality[start:end]   #😄
-                                    quality_score = statistics.mean(quality) #😄
-                                    lowest_quality = min(quality) #😄
-                                    # print(f"{e} | {abx} | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
-                                    log.info(f"[+] FILTERED_GOODMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|{quality_score}|{lowest_quality}")if log_msg else None
-                                    filtered_res.append([flag, gbid, _dfvx_ss.iloc[abx].h3_name, gbfp, _dfvx_ss.iloc[abx].vh_abi_fp, score, quality_score, lowest_quality])
-                    else:
-                        log.info(f"[+] FILTERED_BADMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|---|---")if log_msg else None
-            except:
-                pass
-    if not len(filtered_res) == 0:
-        dfres = pd.DataFrame(filtered_res)
-        dfres.columns = ["Orient", "gbid", "H3_name", "GB_FP", "ABI_FP", "Score", "Quality_score", "Low_quality"]
-        return dfres
-    else:
-        None
+#             # match between gb and vl-abi
+#             try:          
+#                 for a in align(seqA.seq, seqB_vx, match=par_match, mismatch=par_missmatch, gap_open=par_open, gap_extend=par_extend):  #😄
+#                     score = int(a[2])
+#                     # print(f"{e} | {abx} | {flag} | {_dfvx_ss.iloc[abx].vl_abi_fp} |{score}")
+#                     if score >= int(par_filter_thresh):
+#                         # getting the aligned seqA and seqB
+#                         aligned_seq_a = a[0]
+#                         aligned_seq_a = aligned_seq_a.replace('-', '')
+#                         aligned_seq_a_start = aligned_seq_a[0:6]
+#                         aligned_seq_a_length = len(aligned_seq_a) - 6
+#                         aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
+#                         aligned_seq_b = a[1]
+#                         #print(f"{e} | {abx} | VL | {_dfvx_ss.iloc[abx].vl_abi_fp} |{score} | {aligned_seq_a_start} | {aligned_seq_a_end} | {len(aligned_seq_a)} | {len(aligned_seq_b)} | {aligned_seq_a[0:6] +'..'+ aligned_seq_a[-6:]} | {aligned_seq_b[0:6] +'..'+ aligned_seq_b[-6:]}")
+#                         # futher filtering of seqB
+#                         if '-' not in aligned_seq_b:
+#                             if vx_seq_start_a in aligned_seq_a_start:    # 😄
+#                                 if vx_seq_end_a in aligned_seq_a_end:    # 😄
+#                                     aligned_seq = a[0]
+#                                     aligned_seq = aligned_seq.replace('-', '')
+#                                     aligned_seq = Seq(aligned_seq)
+#                                     aligned_seq_rev = aligned_seq.reverse_complement()
+#                                     dna_string = str(seqB_vxinit)        #😄
+#                                     aligned_seq_rev = str(aligned_seq_rev)
+#                                     start = re.search(aligned_seq_rev, dna_string).start()
+#                                     end = re.search(aligned_seq_rev, dna_string).end()
+#                                     quality = quality[start:end]   #😄
+#                                     quality_score = statistics.mean(quality) #😄
+#                                     lowest_quality = min(quality) #😄
+#                                     # print(f"{e} | {abx} | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
+#                                     log.info(f"[+] FILTERED_GOODMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|{quality_score}|{lowest_quality}")if log_msg else None
+#                                     filtered_res.append([flag, gbid, _dfvx_ss.iloc[abx].h3_name, gbfp, _dfvx_ss.iloc[abx].vh_abi_fp, score, quality_score, lowest_quality])
+#                     else:
+#                         log.info(f"[+] FILTERED_BADMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|---|---")if log_msg else None
+#             except:
+#                 pass
+#     if not len(filtered_res) == 0:
+#         dfres = pd.DataFrame(filtered_res)
+#         dfres.columns = ["Orient", "gbid", "H3_name", "GB_FP", "ABI_FP", "Score", "Quality_score", "Low_quality"]
+#         return dfres
+#     else:
+#         None
         
 
-def run_gb_alignment_and_filtering(M_gb_abi_vx, df_vx, vx_template_gb_dict, vx_seq_start_a, vx_seq_end_a, par_match, par_missmatch, par_open, par_extend, par_filter_thresh, log, log_msg=True, is_data_vl=False):
+# def run_gb_alignment_and_filtering(M_gb_abi_vx, df_vx, vx_template_gb_dict, vx_seq_start_a, vx_seq_end_a, par_match, par_missmatch, par_open, par_extend, par_filter_thresh, log, log_msg=True, is_data_vl=False):
+#     filtered_res = []
+#     for e,i in enumerate(range(M_gb_abi_vx.shape[0])[0:]):
+#         gbid = M_gb_abi_vx.iloc[i].gb_id
+#         gbfp = M_gb_abi_vx.iloc[i].gb_fp
+#         sample_id = M_gb_abi_vx.iloc[i].sample_id
+#         _dfvx_ss = df_vx[df_vx.sample_id == M_gb_abi_vx.iloc[i].sample_id]
+#         for e2, abx in enumerate(range(_dfvx_ss.shape[0])):
+#             # genbank
+#             seqA = SeqIO.read(vx_template_gb_dict.get(gbid), 'gb')
+#             # vl
+#             flag = ''
+#             if is_data_vl:
+#                 flag = 'VL'
+#                 seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vl_abi_fp)
+#                 seqB_vxinit = _dfvx_ss.iloc[abx]["vl_inti_sr"].seq
+#                 seqB_vx, quality = get_trimmed_seq_record(seqB, get_quality=True)
+#                 seqB_vx = get_seq_from_record(seqB_vx, reverse=True)
+#             else:
+#                 flag = 'VH'                
+#                 seqB_vx = _dfvx_ss.iloc[abx].vh_sr_seq_r
+#                 seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
+#                 quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
+#             # match between gb and vl-abi
+#             try:          
+#                 for a in align(seqA.seq, seqB_vx, match=par_match, mismatch=par_missmatch, gap_open=par_open, gap_extend=par_extend):
+#                     score = int(a[2])
+#                     if score >= int(par_filter_thresh):
+#                         # getting the aligned seqA and seqB
+#                         aligned_seq_a = a[0]
+#                         aligned_seq_a = aligned_seq_a.replace('-', '')
+#                         aligned_seq_a_start = aligned_seq_a[0:6]
+#                         aligned_seq_a_length = len(aligned_seq_a) - 6
+#                         aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
+#                         aligned_seq_b = a[1]
+#                         # futher filtering of seqB
+#                         if '-' not in aligned_seq_b:
+#                             if vx_seq_start_a in aligned_seq_a_start:
+#                                 if vx_seq_end_a in aligned_seq_a_end:
+#                                     aligned_seq = a[0]
+#                                     aligned_seq = aligned_seq.replace('-', '')
+#                                     aligned_seq = Seq(aligned_seq)
+#                                     aligned_seq_rev = aligned_seq.reverse_complement()
+#                                     dna_string = str(seqB_vxinit)
+#                                     aligned_seq_rev = str(aligned_seq_rev)
+#                                     start = re.search(aligned_seq_rev, dna_string).start()
+#                                     end = re.search(aligned_seq_rev, dna_string).end()
+#                                     quality = quality[start:end]
+#                                     quality_score = statistics.mean(quality)
+#                                     lowest_quality = min(quality)
+#                                     # print(f"{e} | {abx} | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
+#                                     log.info(f"[+] FILTERED_GOODMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{sample_id}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|{quality_score}|{lowest_quality}")if log_msg else None
+#                                     filtered_res.append([flag, gbid, _dfvx_ss.iloc[abx].h3_name, sample_id, gbfp, _dfvx_ss.iloc[abx].vh_abi_fp, score, quality_score, lowest_quality])
+#                     else:
+#                         log.info(f"[+] FILTERED_BADMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{sample_id}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|---|---")if log_msg else None
+#             except:
+#                 pass
+#     if not len(filtered_res) == 0:
+#         dfres = pd.DataFrame(filtered_res)
+#         dfres.columns = ["Orient", "gbid", "H3_name", "sample_id", "GB_FP", "ABI_FP", "Score", "Quality_score", "Low_quality"]
+#         return dfres
+#     else:
+#         None
+        
+
+def run_gb_alignment_and_filtering_v2(M_gb_abi_vx, 
+                                   df_vx, 
+                                   vx_template_gb_dict, 
+                                   vx_seq_start_a, 
+                                   vx_seq_end_a, 
+                                   par_match, 
+                                   par_missmatch, 
+                                   par_open, 
+                                   par_extend, 
+                                   par_filter_thresh, 
+                                   log,
+                                   log_msg=True,
+                                   is_data_vl=False):
     filtered_res = []
     for e,i in enumerate(range(M_gb_abi_vx.shape[0])[0:]):
         gbid = M_gb_abi_vx.iloc[i].gb_id
         gbfp = M_gb_abi_vx.iloc[i].gb_fp
         sample_id = M_gb_abi_vx.iloc[i].sample_id
-        _dfvx_ss = df_vx[df_vx.h3_name == M_gb_abi_vx.iloc[i].h3_name]
-        for e2, abx in enumerate(range(_dfvx_ss.shape[0])):
-            # genbank
-            seqA = SeqIO.read(vx_template_gb_dict.get(gbid), 'gb')
-            # vl
-            flag = ''
-            if is_data_vl:
-                flag = 'VL'
-                seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vl_abi_fp)
-                seqB_vxinit = _dfvx_ss.iloc[abx]["vl_inti_sr"].seq
-                seqB_vx, quality = get_trimmed_seq_record(seqB, get_quality=True)
-                seqB_vx = get_seq_from_record(seqB_vx, reverse=True)
-            else:
-                flag = 'VH'                
-                seqB_vx = _dfvx_ss.iloc[abx].vh_sr_seq_r
-                seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
-                quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
-            # match between gb and vl-abi
-            try:          
-                for a in align(seqA.seq, seqB_vx, match=par_match, mismatch=par_missmatch, gap_open=par_open, gap_extend=par_extend):
-                    score = int(a[2])
-                    if score >= int(par_filter_thresh):
-                        # getting the aligned seqA and seqB
-                        aligned_seq_a = a[0]
-                        aligned_seq_a = aligned_seq_a.replace('-', '')
-                        aligned_seq_a_start = aligned_seq_a[0:6]
-                        aligned_seq_a_length = len(aligned_seq_a) - 6
-                        aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
-                        aligned_seq_b = a[1]
-                        # futher filtering of seqB
-                        if '-' not in aligned_seq_b:
-                            if vx_seq_start_a in aligned_seq_a_start:
-                                if vx_seq_end_a in aligned_seq_a_end:
-                                    aligned_seq = a[0]
-                                    aligned_seq = aligned_seq.replace('-', '')
-                                    aligned_seq = Seq(aligned_seq)
-                                    aligned_seq_rev = aligned_seq.reverse_complement()
-                                    dna_string = str(seqB_vxinit)
-                                    aligned_seq_rev = str(aligned_seq_rev)
-                                    start = re.search(aligned_seq_rev, dna_string).start()
-                                    end = re.search(aligned_seq_rev, dna_string).end()
-                                    quality = quality[start:end]
-                                    quality_score = statistics.mean(quality)
-                                    lowest_quality = min(quality)
-                                    # print(f"{e} | {abx} | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
-                                    log.info(f"[+] FILTERED_GOODMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{sample_id}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|{quality_score}|{lowest_quality}")if log_msg else None
-                                    filtered_res.append([flag, gbid, _dfvx_ss.iloc[abx].h3_name, sample_id, gbfp, _dfvx_ss.iloc[abx].vh_abi_fp, score, quality_score, lowest_quality])
-                    else:
-                        log.info(f"[+] FILTERED_BADMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{sample_id}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|---|---")if log_msg else None
-            except:
-                pass
+        _dfvx_ss = df_vx[(df_vx.sample_id == M_gb_abi_vx.iloc[i].sample_id )]
+        if (_dfvx_ss.h3_name == M_gb_abi_vx.iloc[i].h3_name).all():
+            for e2, abx in enumerate(range(_dfvx_ss.shape[0])):
+                # genbank
+                seqA = SeqIO.read(vx_template_gb_dict.get(gbid), 'gb')
+                # vl
+                flag = ''
+                if is_data_vl:
+                    flag = 'VL'
+                    seqB = get_seqobj_from_abi(_dfvx_ss.iloc[abx].vl_abi_fp)
+                    seqB_vxinit = _dfvx_ss.iloc[abx]["vl_inti_sr"].seq
+                    seqB_vx, quality = get_trimmed_seq_record(seqB, get_quality=True)
+                    seqB_vx = get_seq_from_record(seqB_vx, reverse=True)
+                else:
+                    flag = 'VH'                
+                    seqB_vx = _dfvx_ss.iloc[abx].vh_sr_seq_r
+                    seqB_vxinit = _dfvx_ss.iloc[abx].vh_init_sr.seq
+                    quality = _dfvx_ss.iloc[abx].vh_sr_tqlst
+                # match between gb and vl-abi
+                try:          
+                    for a in align(seqA.seq, seqB_vx, match=par_match, mismatch=par_missmatch, gap_open=par_open, gap_extend=par_extend):
+                        score = int(a[2])
+                        if score >= int(par_filter_thresh):
+                            # getting the aligned seqA and seqB
+                            aligned_seq_a = a[0]
+                            aligned_seq_a = aligned_seq_a.replace('-', '')
+                            aligned_seq_a_start = aligned_seq_a[0:6]
+                            aligned_seq_a_length = len(aligned_seq_a) - 6
+                            aligned_seq_a_end = aligned_seq_a[aligned_seq_a_length:len(aligned_seq_a)]
+                            aligned_seq_b = a[1]
+                            # futher filtering of seqB
+                            if '-' not in aligned_seq_b:
+                                if vx_seq_start_a in aligned_seq_a_start:
+                                    if vx_seq_end_a in aligned_seq_a_end:
+                                        aligned_seq = a[0]
+                                        aligned_seq = aligned_seq.replace('-', '')
+                                        aligned_seq = Seq(aligned_seq)
+                                        aligned_seq_rev = aligned_seq.reverse_complement()
+                                        dna_string = str(seqB_vxinit)
+                                        aligned_seq_rev = str(aligned_seq_rev)
+                                        start = re.search(aligned_seq_rev, dna_string).start()
+                                        end = re.search(aligned_seq_rev, dna_string).end()
+                                        quality = quality[start:end]
+                                        quality_score = statistics.mean(quality)
+                                        lowest_quality = min(quality)
+                                        # print(f"{e} | {abx} | {gbid} | {_dfvx_ss.iloc[abx].h3_name} | {gbfp} | {_dfvx_ss.iloc[abx].vh_abi_fp} | {score}| {quality_score} | {lowest_quality}")
+                                        log.info(f"[+] FILTERED_GOODMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{sample_id}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|{quality_score}|{lowest_quality}")if log_msg else None
+                                        filtered_res.append([flag, gbid, _dfvx_ss.iloc[abx].h3_name, sample_id, gbfp, _dfvx_ss.iloc[abx].vh_abi_fp, score, quality_score, lowest_quality])
+                        else:
+                            log.info(f"[+] FILTERED_BADMATCH: {e}|{abx}|{flag}|{gbid}|{_dfvx_ss.iloc[abx].h3_name}|{sample_id}|{gbfp}|{_dfvx_ss.iloc[abx].vh_abi_fp}|{score}|---|---")if log_msg else None
+                except:
+                    pass
     if not len(filtered_res) == 0:
         dfres = pd.DataFrame(filtered_res)
         dfres.columns = ["Orient", "gbid", "H3_name", "sample_id", "GB_FP", "ABI_FP", "Score", "Quality_score", "Low_quality"]
         return dfres
     else:
         None
-        
         
         
 def cal_mean_error_prob(vh_low_qual:int, vl_low_qual:int):
