@@ -1,0 +1,5 @@
+Bio==1.3.9
+ipython==8.4.0
+pandas==1.4.1
+typer==0.4.2
+XlsxWriter==3.0.3
