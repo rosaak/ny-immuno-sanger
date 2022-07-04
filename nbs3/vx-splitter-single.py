@@ -2,13 +2,12 @@ import configparser
 from collections import Counter
 from itertools import chain
 from pathlib import Path
-from time import perf_counter
 
 import pandas as pd
+import typer
 import utils
 import xlsxwriter
 from fns import *
-import typer
 
 app = typer.Typer()
 
